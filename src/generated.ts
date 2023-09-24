@@ -28,6 +28,16 @@ import {
  */
 export const counterABI = [
   {
+    stateMutability: 'nonpayable',
+    type: 'constructor',
+    inputs: [
+      { name: '_bridgeRoot', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'crossChainOwner', internalType: 'address', type: 'address' },
+    ],
+  },
+  { type: 'error', inputs: [], name: 'InvalidCaller' },
+  { type: 'error', inputs: [], name: 'NotApprovedByGateway' },
+  {
     type: 'event',
     anonymous: false,
     inputs: [
@@ -43,6 +53,54 @@ export const counterABI = [
     name: 'Transfer',
   },
   {
+    stateMutability: 'view',
+    type: 'function',
+    inputs: [],
+    name: 'bridgeRoot',
+    outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
+  },
+  {
+    stateMutability: 'nonpayable',
+    type: 'function',
+    inputs: [
+      { name: '_gateway', internalType: 'address', type: 'address' },
+      { name: '_gasService', internalType: 'address', type: 'address' },
+      { name: 'proof', internalType: 'bytes32[]', type: 'bytes32[]' },
+    ],
+    name: 'enableBridge',
+    outputs: [],
+  },
+  {
+    stateMutability: 'nonpayable',
+    type: 'function',
+    inputs: [
+      { name: 'commandId', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'sourceChain', internalType: 'string', type: 'string' },
+      { name: 'sourceAddress', internalType: 'string', type: 'string' },
+      { name: 'payload', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'execute',
+    outputs: [],
+  },
+  {
+    stateMutability: 'view',
+    type: 'function',
+    inputs: [],
+    name: 'gasService',
+    outputs: [
+      { name: '', internalType: 'contract IAxelarGasService', type: 'address' },
+    ],
+  },
+  {
+    stateMutability: 'view',
+    type: 'function',
+    inputs: [],
+    name: 'gateway',
+    outputs: [
+      { name: '', internalType: 'contract IAxelarGateway', type: 'address' },
+    ],
+  },
+  {
     stateMutability: 'nonpayable',
     type: 'function',
     inputs: [],
@@ -55,6 +113,13 @@ export const counterABI = [
     inputs: [],
     name: 'number',
     outputs: [{ name: '', internalType: 'uint256', type: 'uint256' }],
+  },
+  {
+    stateMutability: 'view',
+    type: 'function',
+    inputs: [],
+    name: 'owner',
+    outputs: [{ name: '', internalType: 'address', type: 'address' }],
   },
   {
     stateMutability: 'nonpayable',
@@ -2108,7 +2173,6 @@ export const safeCrossChainFactoryABI = [
   { type: 'error', inputs: [], name: 'Create2FailedDeployment' },
   { type: 'error', inputs: [], name: 'GasPaymentRequired' },
   { type: 'error', inputs: [], name: 'InvalidCaller' },
-  { type: 'error', inputs: [], name: 'InvalidContractHash' },
   { type: 'error', inputs: [], name: 'NotApprovedByGateway' },
   {
     type: 'event',
@@ -2134,14 +2198,24 @@ export const safeCrossChainFactoryABI = [
     stateMutability: 'nonpayable',
     type: 'function',
     inputs: [
-      { name: 'originChainId', internalType: 'uint256', type: 'uint256' },
-      { name: 'creator', internalType: 'address', type: 'address' },
       { name: 'salt', internalType: 'bytes32', type: 'bytes32' },
       { name: 'bytecode', internalType: 'bytes', type: 'bytes' },
       { name: 'initData', internalType: 'bytes', type: 'bytes' },
     ],
-    name: 'create',
+    name: 'createLocal',
     outputs: [{ name: 'addr', internalType: 'address', type: 'address' }],
+  },
+  {
+    stateMutability: 'payable',
+    type: 'function',
+    inputs: [
+      { name: 'salt', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'bytecode', internalType: 'bytes', type: 'bytes' },
+      { name: 'initData', internalType: 'bytes', type: 'bytes' },
+      { name: 'destinationChain', internalType: 'string', type: 'string' },
+    ],
+    name: 'createRemote',
+    outputs: [],
   },
   {
     stateMutability: 'nonpayable',
@@ -2184,15 +2258,40 @@ export const safeCrossChainFactoryABI = [
       { name: '', internalType: 'contract IAxelarGateway', type: 'address' },
     ],
   },
+] as const
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SafeCrossChainFactoryV2
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const safeCrossChainFactoryV2ABI = [
+  {
+    stateMutability: 'nonpayable',
+    type: 'constructor',
+    inputs: [{ name: '_bridgeRoot', internalType: 'bytes32', type: 'bytes32' }],
+  },
+  { type: 'error', inputs: [], name: 'Create2FailedDeployment' },
+  { type: 'error', inputs: [], name: 'GasPaymentRequired' },
+  { type: 'error', inputs: [], name: 'InvalidCaller' },
+  { type: 'error', inputs: [], name: 'NotApprovedByGateway' },
+  {
+    type: 'event',
+    anonymous: false,
+    inputs: [
+      {
+        name: 'created',
+        internalType: 'address',
+        type: 'address',
+        indexed: false,
+      },
+    ],
+    name: 'ContractCreated',
+  },
   {
     stateMutability: 'view',
     type: 'function',
-    inputs: [
-      { name: 'originChainId', internalType: 'uint256', type: 'uint256' },
-      { name: 'creator', internalType: 'address', type: 'address' },
-      { name: 'salt', internalType: 'bytes32', type: 'bytes32' },
-    ],
-    name: 'getContractHash',
+    inputs: [],
+    name: 'bridgeRoot',
     outputs: [{ name: '', internalType: 'bytes32', type: 'bytes32' }],
   },
   {
@@ -2203,8 +2302,8 @@ export const safeCrossChainFactoryABI = [
       { name: 'bytecode', internalType: 'bytes', type: 'bytes' },
       { name: 'initData', internalType: 'bytes', type: 'bytes' },
     ],
-    name: 'setContractHash',
-    outputs: [],
+    name: 'createLocal',
+    outputs: [{ name: 'addr', internalType: 'address', type: 'address' }],
   },
   {
     stateMutability: 'payable',
@@ -2215,8 +2314,49 @@ export const safeCrossChainFactoryABI = [
       { name: 'initData', internalType: 'bytes', type: 'bytes' },
       { name: 'destinationChain', internalType: 'string', type: 'string' },
     ],
-    name: 'setRemoteContractHash',
+    name: 'createRemote',
     outputs: [],
+  },
+  {
+    stateMutability: 'nonpayable',
+    type: 'function',
+    inputs: [
+      { name: '_gateway', internalType: 'address', type: 'address' },
+      { name: '_gasService', internalType: 'address', type: 'address' },
+      { name: 'proof', internalType: 'bytes32[]', type: 'bytes32[]' },
+    ],
+    name: 'enableBridge',
+    outputs: [],
+  },
+  {
+    stateMutability: 'nonpayable',
+    type: 'function',
+    inputs: [
+      { name: 'commandId', internalType: 'bytes32', type: 'bytes32' },
+      { name: 'sourceChain', internalType: 'string', type: 'string' },
+      { name: 'sourceAddress', internalType: 'string', type: 'string' },
+      { name: 'payload', internalType: 'bytes', type: 'bytes' },
+    ],
+    name: 'execute',
+    outputs: [],
+  },
+  {
+    stateMutability: 'view',
+    type: 'function',
+    inputs: [],
+    name: 'gasService',
+    outputs: [
+      { name: '', internalType: 'contract IAxelarGasService', type: 'address' },
+    ],
+  },
+  {
+    stateMutability: 'view',
+    type: 'function',
+    inputs: [],
+    name: 'gateway',
+    outputs: [
+      { name: '', internalType: 'contract IAxelarGateway', type: 'address' },
+    ],
   },
 ] as const
 
@@ -2323,6 +2463,87 @@ export function useCounterRead<
 }
 
 /**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"bridgeRoot"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function useCounterBridgeRoot<
+  TFunctionName extends 'bridgeRoot',
+  TSelectData = ReadContractResult<typeof counterABI, TFunctionName>,
+>(
+  config: Omit<
+    UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>,
+    'abi' | 'address' | 'functionName'
+  > & { chainId?: keyof typeof counterAddress } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return useContractRead({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'bridgeRoot',
+    ...config,
+  } as UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"gasService"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function useCounterGasService<
+  TFunctionName extends 'gasService',
+  TSelectData = ReadContractResult<typeof counterABI, TFunctionName>,
+>(
+  config: Omit<
+    UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>,
+    'abi' | 'address' | 'functionName'
+  > & { chainId?: keyof typeof counterAddress } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return useContractRead({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'gasService',
+    ...config,
+  } as UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"gateway"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function useCounterGateway<
+  TFunctionName extends 'gateway',
+  TSelectData = ReadContractResult<typeof counterABI, TFunctionName>,
+>(
+  config: Omit<
+    UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>,
+    'abi' | 'address' | 'functionName'
+  > & { chainId?: keyof typeof counterAddress } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return useContractRead({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'gateway',
+    ...config,
+  } as UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>)
+}
+
+/**
  * Wraps __{@link useContractRead}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"number"`.
  *
  * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
@@ -2345,6 +2566,33 @@ export function useCounterNumber<
     abi: counterABI,
     address: counterAddress[chainId as keyof typeof counterAddress],
     functionName: 'number',
+    ...config,
+  } as UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"owner"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function useCounterOwner<
+  TFunctionName extends 'owner',
+  TSelectData = ReadContractResult<typeof counterABI, TFunctionName>,
+>(
+  config: Omit<
+    UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>,
+    'abi' | 'address' | 'functionName'
+  > & { chainId?: keyof typeof counterAddress } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return useContractRead({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'owner',
     ...config,
   } as UseContractReadConfig<typeof counterABI, TFunctionName, TSelectData>)
 }
@@ -2379,6 +2627,86 @@ export function useCounterWrite<
   return useContractWrite<typeof counterABI, TFunctionName, TMode>({
     abi: counterABI,
     address: counterAddress[chainId as keyof typeof counterAddress],
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"enableBridge"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function useCounterEnableBridge<
+  TMode extends WriteContractMode = undefined,
+  TChainId extends number = keyof typeof counterAddress,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof counterABI,
+          'enableBridge'
+        >['request']['abi'],
+        'enableBridge',
+        TMode
+      > & {
+        address?: Address
+        chainId?: TChainId
+        functionName?: 'enableBridge'
+      }
+    : UseContractWriteConfig<typeof counterABI, 'enableBridge', TMode> & {
+        abi?: never
+        address?: never
+        chainId?: TChainId
+        functionName?: 'enableBridge'
+      } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return useContractWrite<typeof counterABI, 'enableBridge', TMode>({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'enableBridge',
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"execute"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function useCounterExecute<
+  TMode extends WriteContractMode = undefined,
+  TChainId extends number = keyof typeof counterAddress,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof counterABI,
+          'execute'
+        >['request']['abi'],
+        'execute',
+        TMode
+      > & { address?: Address; chainId?: TChainId; functionName?: 'execute' }
+    : UseContractWriteConfig<typeof counterABI, 'execute', TMode> & {
+        abi?: never
+        address?: never
+        chainId?: TChainId
+        functionName?: 'execute'
+      } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return useContractWrite<typeof counterABI, 'execute', TMode>({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'execute',
     ...config,
   } as any)
 }
@@ -2480,6 +2808,54 @@ export function usePrepareCounterWrite<TFunctionName extends string>(
     address: counterAddress[chainId as keyof typeof counterAddress],
     ...config,
   } as UsePrepareContractWriteConfig<typeof counterABI, TFunctionName>)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"enableBridge"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function usePrepareCounterEnableBridge(
+  config: Omit<
+    UsePrepareContractWriteConfig<typeof counterABI, 'enableBridge'>,
+    'abi' | 'address' | 'functionName'
+  > & { chainId?: keyof typeof counterAddress } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return usePrepareContractWrite({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'enableBridge',
+    ...config,
+  } as UsePrepareContractWriteConfig<typeof counterABI, 'enableBridge'>)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link counterABI}__ and `functionName` set to `"execute"`.
+ *
+ * - [__View Contract on Ethereum Etherscan__](https://etherscan.io/address/0x1A61839Eb5fC6eBBcAe01eD5E79062E598792Dac)
+ * - [__View Contract on Goerli Etherscan__](https://goerli.etherscan.io/address/0x78991BB1D194C1235fe285240af8489CFA552151)
+ * -
+ */
+export function usePrepareCounterExecute(
+  config: Omit<
+    UsePrepareContractWriteConfig<typeof counterABI, 'execute'>,
+    'abi' | 'address' | 'functionName'
+  > & { chainId?: keyof typeof counterAddress } = {} as any,
+) {
+  const { chain } = useNetwork()
+  const defaultChainId = useChainId()
+  const chainId = config.chainId ?? chain?.id ?? defaultChainId
+  return usePrepareContractWrite({
+    abi: counterABI,
+    address: counterAddress[chainId as keyof typeof counterAddress],
+    functionName: 'execute',
+    ...config,
+  } as UsePrepareContractWriteConfig<typeof counterABI, 'execute'>)
 }
 
 /**
@@ -7121,36 +7497,6 @@ export function useSafeCrossChainFactoryGateway<
 }
 
 /**
- * Wraps __{@link useContractRead}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"getContractHash"`.
- */
-export function useSafeCrossChainFactoryGetContractHash<
-  TFunctionName extends 'getContractHash',
-  TSelectData = ReadContractResult<
-    typeof safeCrossChainFactoryABI,
-    TFunctionName
-  >,
->(
-  config: Omit<
-    UseContractReadConfig<
-      typeof safeCrossChainFactoryABI,
-      TFunctionName,
-      TSelectData
-    >,
-    'abi' | 'functionName'
-  > = {} as any,
-) {
-  return useContractRead({
-    abi: safeCrossChainFactoryABI,
-    functionName: 'getContractHash',
-    ...config,
-  } as UseContractReadConfig<
-    typeof safeCrossChainFactoryABI,
-    TFunctionName,
-    TSelectData
-  >)
-}
-
-/**
  * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__.
  */
 export function useSafeCrossChainFactoryWrite<
@@ -7182,32 +7528,71 @@ export function useSafeCrossChainFactoryWrite<
 }
 
 /**
- * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"create"`.
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"createLocal"`.
  */
-export function useSafeCrossChainFactoryCreate<
+export function useSafeCrossChainFactoryCreateLocal<
   TMode extends WriteContractMode = undefined,
 >(
   config: TMode extends 'prepared'
     ? UseContractWriteConfig<
         PrepareWriteContractResult<
           typeof safeCrossChainFactoryABI,
-          'create'
+          'createLocal'
         >['request']['abi'],
-        'create',
+        'createLocal',
         TMode
-      > & { functionName?: 'create' }
+      > & { functionName?: 'createLocal' }
     : UseContractWriteConfig<
         typeof safeCrossChainFactoryABI,
-        'create',
+        'createLocal',
         TMode
       > & {
         abi?: never
-        functionName?: 'create'
+        functionName?: 'createLocal'
       } = {} as any,
 ) {
-  return useContractWrite<typeof safeCrossChainFactoryABI, 'create', TMode>({
+  return useContractWrite<
+    typeof safeCrossChainFactoryABI,
+    'createLocal',
+    TMode
+  >({
     abi: safeCrossChainFactoryABI,
-    functionName: 'create',
+    functionName: 'createLocal',
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"createRemote"`.
+ */
+export function useSafeCrossChainFactoryCreateRemote<
+  TMode extends WriteContractMode = undefined,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof safeCrossChainFactoryABI,
+          'createRemote'
+        >['request']['abi'],
+        'createRemote',
+        TMode
+      > & { functionName?: 'createRemote' }
+    : UseContractWriteConfig<
+        typeof safeCrossChainFactoryABI,
+        'createRemote',
+        TMode
+      > & {
+        abi?: never
+        functionName?: 'createRemote'
+      } = {} as any,
+) {
+  return useContractWrite<
+    typeof safeCrossChainFactoryABI,
+    'createRemote',
+    TMode
+  >({
+    abi: safeCrossChainFactoryABI,
+    functionName: 'createRemote',
     ...config,
   } as any)
 }
@@ -7279,76 +7664,6 @@ export function useSafeCrossChainFactoryExecute<
 }
 
 /**
- * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"setContractHash"`.
- */
-export function useSafeCrossChainFactorySetContractHash<
-  TMode extends WriteContractMode = undefined,
->(
-  config: TMode extends 'prepared'
-    ? UseContractWriteConfig<
-        PrepareWriteContractResult<
-          typeof safeCrossChainFactoryABI,
-          'setContractHash'
-        >['request']['abi'],
-        'setContractHash',
-        TMode
-      > & { functionName?: 'setContractHash' }
-    : UseContractWriteConfig<
-        typeof safeCrossChainFactoryABI,
-        'setContractHash',
-        TMode
-      > & {
-        abi?: never
-        functionName?: 'setContractHash'
-      } = {} as any,
-) {
-  return useContractWrite<
-    typeof safeCrossChainFactoryABI,
-    'setContractHash',
-    TMode
-  >({
-    abi: safeCrossChainFactoryABI,
-    functionName: 'setContractHash',
-    ...config,
-  } as any)
-}
-
-/**
- * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"setRemoteContractHash"`.
- */
-export function useSafeCrossChainFactorySetRemoteContractHash<
-  TMode extends WriteContractMode = undefined,
->(
-  config: TMode extends 'prepared'
-    ? UseContractWriteConfig<
-        PrepareWriteContractResult<
-          typeof safeCrossChainFactoryABI,
-          'setRemoteContractHash'
-        >['request']['abi'],
-        'setRemoteContractHash',
-        TMode
-      > & { functionName?: 'setRemoteContractHash' }
-    : UseContractWriteConfig<
-        typeof safeCrossChainFactoryABI,
-        'setRemoteContractHash',
-        TMode
-      > & {
-        abi?: never
-        functionName?: 'setRemoteContractHash'
-      } = {} as any,
-) {
-  return useContractWrite<
-    typeof safeCrossChainFactoryABI,
-    'setRemoteContractHash',
-    TMode
-  >({
-    abi: safeCrossChainFactoryABI,
-    functionName: 'setRemoteContractHash',
-    ...config,
-  } as any)
-}
-
-/**
  * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__.
  */
 export function usePrepareSafeCrossChainFactoryWrite<
@@ -7372,19 +7687,47 @@ export function usePrepareSafeCrossChainFactoryWrite<
 }
 
 /**
- * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"create"`.
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"createLocal"`.
  */
-export function usePrepareSafeCrossChainFactoryCreate(
+export function usePrepareSafeCrossChainFactoryCreateLocal(
   config: Omit<
-    UsePrepareContractWriteConfig<typeof safeCrossChainFactoryABI, 'create'>,
+    UsePrepareContractWriteConfig<
+      typeof safeCrossChainFactoryABI,
+      'createLocal'
+    >,
     'abi' | 'functionName'
   > = {} as any,
 ) {
   return usePrepareContractWrite({
     abi: safeCrossChainFactoryABI,
-    functionName: 'create',
+    functionName: 'createLocal',
     ...config,
-  } as UsePrepareContractWriteConfig<typeof safeCrossChainFactoryABI, 'create'>)
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryABI,
+    'createLocal'
+  >)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"createRemote"`.
+ */
+export function usePrepareSafeCrossChainFactoryCreateRemote(
+  config: Omit<
+    UsePrepareContractWriteConfig<
+      typeof safeCrossChainFactoryABI,
+      'createRemote'
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return usePrepareContractWrite({
+    abi: safeCrossChainFactoryABI,
+    functionName: 'createRemote',
+    ...config,
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryABI,
+    'createRemote'
+  >)
 }
 
 /**
@@ -7429,50 +7772,6 @@ export function usePrepareSafeCrossChainFactoryExecute(
 }
 
 /**
- * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"setContractHash"`.
- */
-export function usePrepareSafeCrossChainFactorySetContractHash(
-  config: Omit<
-    UsePrepareContractWriteConfig<
-      typeof safeCrossChainFactoryABI,
-      'setContractHash'
-    >,
-    'abi' | 'functionName'
-  > = {} as any,
-) {
-  return usePrepareContractWrite({
-    abi: safeCrossChainFactoryABI,
-    functionName: 'setContractHash',
-    ...config,
-  } as UsePrepareContractWriteConfig<
-    typeof safeCrossChainFactoryABI,
-    'setContractHash'
-  >)
-}
-
-/**
- * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryABI}__ and `functionName` set to `"setRemoteContractHash"`.
- */
-export function usePrepareSafeCrossChainFactorySetRemoteContractHash(
-  config: Omit<
-    UsePrepareContractWriteConfig<
-      typeof safeCrossChainFactoryABI,
-      'setRemoteContractHash'
-    >,
-    'abi' | 'functionName'
-  > = {} as any,
-) {
-  return usePrepareContractWrite({
-    abi: safeCrossChainFactoryABI,
-    functionName: 'setRemoteContractHash',
-    ...config,
-  } as UsePrepareContractWriteConfig<
-    typeof safeCrossChainFactoryABI,
-    'setRemoteContractHash'
-  >)
-}
-
-/**
  * Wraps __{@link useContractEvent}__ with `abi` set to __{@link safeCrossChainFactoryABI}__.
  */
 export function useSafeCrossChainFactoryEvent<TEventName extends string>(
@@ -7502,6 +7801,437 @@ export function useSafeCrossChainFactoryContractCreatedEvent(
     ...config,
   } as UseContractEventConfig<
     typeof safeCrossChainFactoryABI,
+    'ContractCreated'
+  >)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__.
+ */
+export function useSafeCrossChainFactoryV2Read<
+  TFunctionName extends string,
+  TSelectData = ReadContractResult<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName
+  >,
+>(
+  config: Omit<
+    UseContractReadConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      TFunctionName,
+      TSelectData
+    >,
+    'abi'
+  > = {} as any,
+) {
+  return useContractRead({
+    abi: safeCrossChainFactoryV2ABI,
+    ...config,
+  } as UseContractReadConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName,
+    TSelectData
+  >)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"bridgeRoot"`.
+ */
+export function useSafeCrossChainFactoryV2BridgeRoot<
+  TFunctionName extends 'bridgeRoot',
+  TSelectData = ReadContractResult<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName
+  >,
+>(
+  config: Omit<
+    UseContractReadConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      TFunctionName,
+      TSelectData
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return useContractRead({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'bridgeRoot',
+    ...config,
+  } as UseContractReadConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName,
+    TSelectData
+  >)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"gasService"`.
+ */
+export function useSafeCrossChainFactoryV2GasService<
+  TFunctionName extends 'gasService',
+  TSelectData = ReadContractResult<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName
+  >,
+>(
+  config: Omit<
+    UseContractReadConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      TFunctionName,
+      TSelectData
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return useContractRead({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'gasService',
+    ...config,
+  } as UseContractReadConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName,
+    TSelectData
+  >)
+}
+
+/**
+ * Wraps __{@link useContractRead}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"gateway"`.
+ */
+export function useSafeCrossChainFactoryV2Gateway<
+  TFunctionName extends 'gateway',
+  TSelectData = ReadContractResult<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName
+  >,
+>(
+  config: Omit<
+    UseContractReadConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      TFunctionName,
+      TSelectData
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return useContractRead({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'gateway',
+    ...config,
+  } as UseContractReadConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName,
+    TSelectData
+  >)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__.
+ */
+export function useSafeCrossChainFactoryV2Write<
+  TFunctionName extends string,
+  TMode extends WriteContractMode = undefined,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof safeCrossChainFactoryV2ABI,
+          string
+        >['request']['abi'],
+        TFunctionName,
+        TMode
+      >
+    : UseContractWriteConfig<
+        typeof safeCrossChainFactoryV2ABI,
+        TFunctionName,
+        TMode
+      > & {
+        abi?: never
+      } = {} as any,
+) {
+  return useContractWrite<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName,
+    TMode
+  >({ abi: safeCrossChainFactoryV2ABI, ...config } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"createLocal"`.
+ */
+export function useSafeCrossChainFactoryV2CreateLocal<
+  TMode extends WriteContractMode = undefined,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof safeCrossChainFactoryV2ABI,
+          'createLocal'
+        >['request']['abi'],
+        'createLocal',
+        TMode
+      > & { functionName?: 'createLocal' }
+    : UseContractWriteConfig<
+        typeof safeCrossChainFactoryV2ABI,
+        'createLocal',
+        TMode
+      > & {
+        abi?: never
+        functionName?: 'createLocal'
+      } = {} as any,
+) {
+  return useContractWrite<
+    typeof safeCrossChainFactoryV2ABI,
+    'createLocal',
+    TMode
+  >({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'createLocal',
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"createRemote"`.
+ */
+export function useSafeCrossChainFactoryV2CreateRemote<
+  TMode extends WriteContractMode = undefined,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof safeCrossChainFactoryV2ABI,
+          'createRemote'
+        >['request']['abi'],
+        'createRemote',
+        TMode
+      > & { functionName?: 'createRemote' }
+    : UseContractWriteConfig<
+        typeof safeCrossChainFactoryV2ABI,
+        'createRemote',
+        TMode
+      > & {
+        abi?: never
+        functionName?: 'createRemote'
+      } = {} as any,
+) {
+  return useContractWrite<
+    typeof safeCrossChainFactoryV2ABI,
+    'createRemote',
+    TMode
+  >({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'createRemote',
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"enableBridge"`.
+ */
+export function useSafeCrossChainFactoryV2EnableBridge<
+  TMode extends WriteContractMode = undefined,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof safeCrossChainFactoryV2ABI,
+          'enableBridge'
+        >['request']['abi'],
+        'enableBridge',
+        TMode
+      > & { functionName?: 'enableBridge' }
+    : UseContractWriteConfig<
+        typeof safeCrossChainFactoryV2ABI,
+        'enableBridge',
+        TMode
+      > & {
+        abi?: never
+        functionName?: 'enableBridge'
+      } = {} as any,
+) {
+  return useContractWrite<
+    typeof safeCrossChainFactoryV2ABI,
+    'enableBridge',
+    TMode
+  >({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'enableBridge',
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link useContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"execute"`.
+ */
+export function useSafeCrossChainFactoryV2Execute<
+  TMode extends WriteContractMode = undefined,
+>(
+  config: TMode extends 'prepared'
+    ? UseContractWriteConfig<
+        PrepareWriteContractResult<
+          typeof safeCrossChainFactoryV2ABI,
+          'execute'
+        >['request']['abi'],
+        'execute',
+        TMode
+      > & { functionName?: 'execute' }
+    : UseContractWriteConfig<
+        typeof safeCrossChainFactoryV2ABI,
+        'execute',
+        TMode
+      > & {
+        abi?: never
+        functionName?: 'execute'
+      } = {} as any,
+) {
+  return useContractWrite<typeof safeCrossChainFactoryV2ABI, 'execute', TMode>({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'execute',
+    ...config,
+  } as any)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__.
+ */
+export function usePrepareSafeCrossChainFactoryV2Write<
+  TFunctionName extends string,
+>(
+  config: Omit<
+    UsePrepareContractWriteConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      TFunctionName
+    >,
+    'abi'
+  > = {} as any,
+) {
+  return usePrepareContractWrite({
+    abi: safeCrossChainFactoryV2ABI,
+    ...config,
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    TFunctionName
+  >)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"createLocal"`.
+ */
+export function usePrepareSafeCrossChainFactoryV2CreateLocal(
+  config: Omit<
+    UsePrepareContractWriteConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      'createLocal'
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return usePrepareContractWrite({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'createLocal',
+    ...config,
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    'createLocal'
+  >)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"createRemote"`.
+ */
+export function usePrepareSafeCrossChainFactoryV2CreateRemote(
+  config: Omit<
+    UsePrepareContractWriteConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      'createRemote'
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return usePrepareContractWrite({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'createRemote',
+    ...config,
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    'createRemote'
+  >)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"enableBridge"`.
+ */
+export function usePrepareSafeCrossChainFactoryV2EnableBridge(
+  config: Omit<
+    UsePrepareContractWriteConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      'enableBridge'
+    >,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return usePrepareContractWrite({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'enableBridge',
+    ...config,
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    'enableBridge'
+  >)
+}
+
+/**
+ * Wraps __{@link usePrepareContractWrite}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `functionName` set to `"execute"`.
+ */
+export function usePrepareSafeCrossChainFactoryV2Execute(
+  config: Omit<
+    UsePrepareContractWriteConfig<typeof safeCrossChainFactoryV2ABI, 'execute'>,
+    'abi' | 'functionName'
+  > = {} as any,
+) {
+  return usePrepareContractWrite({
+    abi: safeCrossChainFactoryV2ABI,
+    functionName: 'execute',
+    ...config,
+  } as UsePrepareContractWriteConfig<
+    typeof safeCrossChainFactoryV2ABI,
+    'execute'
+  >)
+}
+
+/**
+ * Wraps __{@link useContractEvent}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__.
+ */
+export function useSafeCrossChainFactoryV2Event<TEventName extends string>(
+  config: Omit<
+    UseContractEventConfig<typeof safeCrossChainFactoryV2ABI, TEventName>,
+    'abi'
+  > = {} as any,
+) {
+  return useContractEvent({
+    abi: safeCrossChainFactoryV2ABI,
+    ...config,
+  } as UseContractEventConfig<typeof safeCrossChainFactoryV2ABI, TEventName>)
+}
+
+/**
+ * Wraps __{@link useContractEvent}__ with `abi` set to __{@link safeCrossChainFactoryV2ABI}__ and `eventName` set to `"ContractCreated"`.
+ */
+export function useSafeCrossChainFactoryV2ContractCreatedEvent(
+  config: Omit<
+    UseContractEventConfig<
+      typeof safeCrossChainFactoryV2ABI,
+      'ContractCreated'
+    >,
+    'abi' | 'eventName'
+  > = {} as any,
+) {
+  return useContractEvent({
+    abi: safeCrossChainFactoryV2ABI,
+    eventName: 'ContractCreated',
+    ...config,
+  } as UseContractEventConfig<
+    typeof safeCrossChainFactoryV2ABI,
     'ContractCreated'
   >)
 }
