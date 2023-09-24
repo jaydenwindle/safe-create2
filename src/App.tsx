@@ -307,7 +307,7 @@ export function App() {
     <Container alignItems={"center"} justifyContent={"center"} mt={8}>
       <Flex flexDirection={"column"}>
         <Center mb={8}>
-          <Heading>Safe Cross Chain Factory</Heading>
+          <Heading>Safe Create2</Heading>
         </Center>
         <Center mb={4}>
           <w3m-button />
