@@ -13,19 +13,34 @@
     "wagmi": "wagmi generate"
   },
   "dependencies": {
+    "@axelar-network/axelar-chains-config": "^0.1.2",
+    "@axelar-network/axelarjs-sdk": "^0.13.6",
+    "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/react": "^2.8.1",
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@openzeppelin/merkle-tree": "^1.0.5",
+    "@rainbow-me/rainbowkit": "^1.0.11",
+    "@safe-global/api-kit": "^1.3.1",
+    "@safe-global/protocol-kit": "^1.3.0",
     "@wagmi/cli": "^1.0.0",
     "buffer": "^6.0.3",
+    "ethers": "5.7.2",
+    "framer-motion": "^10.16.4",
     "process": "^0.11.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "swr": "^2.2.2",
     "util": "^0.12.4",
-    "viem": "~0.3.36",
-    "wagmi": "^1.0.6"
+    "viem": "~0.3.50",
+    "wagmi": "^1.4.2"
   },
   "devDependencies": {
+    "@types/node": "^20.6.4",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.3",
     "@vitejs/plugin-react": "^4.0.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
     "vite": "^4.3.5"
   }

@@ -6,16 +6,21 @@ import {IAxelarGasService} from "axelar-gmp-sdk-solidity/interfaces/IAxelarGasSe
 import {Strings} from "openzeppelin/utils/Strings.sol";
 import {MerkleProof} from "openzeppelin/utils/cryptography/MerkleProof.sol";
 
-contract SafeCreate2Factory {
+import {StringCasing} from "./lib/StringCasing.sol";
+
+contract SafeCrossChainFactory {
     error Create2FailedDeployment();
     error InvalidContractHash();
     error GasPaymentRequired();
     error NotApprovedByGateway();
+    error InvalidCaller();
 
-    bytes32 immutable bridgeRoot;
+    event ContractCreated(address created);
 
-    IAxelarGateway gateway;
-    IAxelarGasService gasService;
+    bytes32 public immutable bridgeRoot;
+
+    IAxelarGateway public gateway;
+    IAxelarGasService public gasService;
 
     // origin chain ID => creator address => salt => keccack256(abi.encode(bytecode, initData))
     mapping(uint256 => mapping(address => mapping(bytes32 => bytes32))) contractHash;
@@ -31,7 +36,7 @@ contract SafeCreate2Factory {
         gasService = IAxelarGasService(_gasService);
     }
 
-    function setRemoteContractHash(
+    function setContractHashRemote(
         bytes32 salt,
         bytes memory bytecode,
         bytes calldata initData,
@@ -62,7 +67,7 @@ contract SafeCreate2Factory {
 
         bytes32 _contractSalt = keccak256(abi.encode(originChainId, creator, salt));
 
-        bytes memory _bytecode = abi.encodePacked(bytecode, creator);
+        bytes memory _bytecode = abi.encodePacked(bytecode, bridgeRoot, creator);
 
         assembly {
             addr := create2(0, add(_bytecode, 0x20), mload(_bytecode), _contractSalt)
@@ -76,6 +81,8 @@ contract SafeCreate2Factory {
             (bool success,) = addr.call(initData);
             if (!success) revert Create2FailedDeployment();
         }
+
+        emit ContractCreated(addr);
     }
 
     function execute(
@@ -90,6 +97,13 @@ contract SafeCreate2Factory {
             revert NotApprovedByGateway();
         }
 
+        string memory _source = StringCasing.toLower(bytes(sourceAddress));
+        string memory _self = Strings.toHexString(address(this));
+
+        if (!Strings.equal(_source, _self)) {
+            revert InvalidCaller();
+        }
+
         (uint256 originChainId, address creator, bytes32 salt, bytes32 _contractHash) =
             abi.decode(payload, (uint256, address, bytes32, bytes32));
 
@@ -97,6 +111,7 @@ contract SafeCreate2Factory {
     }
 
     function setContractHash(bytes32 salt, bytes memory bytecode, bytes calldata initData) public {
+        if (getContractHash(block.chainid, msg.sender, salt) != bytes32(0)) revert InvalidContractHash();
         contractHash[block.chainid][msg.sender][salt] = keccak256(abi.encode(bytecode, initData));
     }
 

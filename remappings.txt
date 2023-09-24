@@ -1,6 +1,6 @@
-axelar-gmp-sdk-solidity/=lib/axelar-gmp-sdk-solidity/contracts/
-ds-test/=lib/forge-std/lib/ds-test/src/
-erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/
-forge-std/=lib/forge-std/src/
-openzeppelin-contracts/=lib/openzeppelin-contracts/
-openzeppelin/=lib/openzeppelin-contracts/contracts/
+axelar-gmp-sdk-solidity/=contracts/lib/axelar-gmp-sdk-solidity/contracts/
+ds-test/=contracts/lib/forge-std/lib/ds-test/src/
+erc4626-tests/=contracts/lib/openzeppelin-contracts/lib/erc4626-tests/
+forge-std/=contracts/lib/forge-std/src/
+openzeppelin-contracts/=contracts/lib/openzeppelin-contracts/
+openzeppelin/=contracts/lib/openzeppelin-contracts/contracts/
