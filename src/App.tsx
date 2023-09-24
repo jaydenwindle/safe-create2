@@ -306,7 +306,8 @@ export function App() {
           <Heading>Safe Cross Chain Factory</Heading>
         </Center>
         <Center mb={4}>
-          <ConnectButton />
+          <w3m-button />
+          {/* <ConnectButton /> */}
         </Center>
       </Flex>
 
