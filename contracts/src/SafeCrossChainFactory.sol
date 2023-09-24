@@ -10,7 +10,6 @@ import {StringCasing} from "./lib/StringCasing.sol";
 
 contract SafeCrossChainFactory {
     error Create2FailedDeployment();
-    error InvalidContractHash();
     error GasPaymentRequired();
     error NotApprovedByGateway();
     error InvalidCaller();
@@ -21,9 +20,6 @@ contract SafeCrossChainFactory {
 
     IAxelarGateway public gateway;
     IAxelarGasService public gasService;
-
-    // origin chain ID => creator address => salt => keccack256(abi.encode(bytecode, initData))
-    mapping(uint256 => mapping(address => mapping(bytes32 => bytes32))) contractHash;
 
     constructor(bytes32 _bridgeRoot) {
         bridgeRoot = _bridgeRoot;
@@ -36,16 +32,25 @@ contract SafeCrossChainFactory {
         gasService = IAxelarGasService(_gasService);
     }
 
-    function setContractHashRemote(
+    function createLocal(bytes32 salt, bytes calldata bytecode, bytes calldata initData)
+        external
+        returns (address addr)
+    {
+        uint256 originChainId = block.chainid;
+        address creator = msg.sender;
+
+        return _create(originChainId, creator, salt, bytecode, initData);
+    }
+
+    function createRemote(
         bytes32 salt,
-        bytes memory bytecode,
+        bytes calldata bytecode,
         bytes calldata initData,
         string calldata destinationChain
     ) external payable {
-        if (getContractHash(block.chainid, msg.sender, salt) == bytes32(0)) setContractHash(salt, bytecode, initData);
         if (msg.value == 0) revert GasPaymentRequired();
 
-        bytes memory payload = abi.encode(block.chainid, msg.sender, salt, keccak256(abi.encode(bytecode, initData)));
+        bytes memory payload = abi.encode(block.chainid, msg.sender, salt, bytecode, initData);
         string memory _self = Strings.toHexString(address(this));
 
         gasService.payNativeGasForContractCall{value: msg.value}(
@@ -53,36 +58,6 @@ contract SafeCrossChainFactory {
         );
 
         gateway.callContract(destinationChain, _self, payload);
-    }
-
-    function create(
-        uint256 originChainId,
-        address creator,
-        bytes32 salt,
-        bytes calldata bytecode,
-        bytes calldata initData
-    ) external returns (address addr) {
-        bytes32 _contractHash = keccak256(abi.encode(bytecode, initData));
-        if (_contractHash != getContractHash(originChainId, creator, salt)) revert InvalidContractHash();
-
-        bytes32 _contractSalt = keccak256(abi.encode(originChainId, creator, salt));
-
-        bytes memory _bytecode = abi.encodePacked(bytecode, bridgeRoot, creator);
-
-        assembly {
-            addr := create2(0, add(_bytecode, 0x20), mload(_bytecode), _contractSalt)
-        }
-
-        if (addr == address(0)) {
-            revert Create2FailedDeployment();
-        }
-
-        if (initData.length > 0) {
-            (bool success,) = addr.call(initData);
-            if (!success) revert Create2FailedDeployment();
-        }
-
-        emit ContractCreated(addr);
     }
 
     function execute(
@@ -104,18 +79,33 @@ contract SafeCrossChainFactory {
             revert InvalidCaller();
         }
 
-        (uint256 originChainId, address creator, bytes32 salt, bytes32 _contractHash) =
-            abi.decode(payload, (uint256, address, bytes32, bytes32));
+        (uint256 originChainId, address creator, bytes32 salt, bytes memory bytecode, bytes memory initData) =
+            abi.decode(payload, (uint256, address, bytes32, bytes, bytes));
 
-        contractHash[originChainId][creator][salt] = _contractHash;
+        _create(originChainId, creator, salt, bytecode, initData);
     }
 
-    function setContractHash(bytes32 salt, bytes memory bytecode, bytes calldata initData) public {
-        if (getContractHash(block.chainid, msg.sender, salt) != bytes32(0)) revert InvalidContractHash();
-        contractHash[block.chainid][msg.sender][salt] = keccak256(abi.encode(bytecode, initData));
-    }
+    function _create(uint256 originChainId, address creator, bytes32 salt, bytes memory bytecode, bytes memory initData)
+        internal
+        returns (address addr)
+    {
+        bytes32 _contractSalt = keccak256(abi.encode(originChainId, creator, salt));
 
-    function getContractHash(uint256 originChainId, address creator, bytes32 salt) public view returns (bytes32) {
-        return contractHash[originChainId][creator][salt];
+        bytes memory _bytecode = abi.encodePacked(bytecode, abi.encode(bridgeRoot, creator));
+
+        assembly {
+            addr := create2(0, add(_bytecode, 0x20), mload(_bytecode), _contractSalt)
+        }
+
+        if (addr == address(0)) {
+            revert Create2FailedDeployment();
+        }
+
+        if (initData.length > 0) {
+            (bool success,) = addr.call(initData);
+            if (!success) revert Create2FailedDeployment();
+        }
+
+        emit ContractCreated(addr);
     }
 }

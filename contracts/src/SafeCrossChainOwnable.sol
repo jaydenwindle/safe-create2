@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "forge-std/console.sol";
+
 import {IAxelarGateway} from "axelar-gmp-sdk-solidity/interfaces/IAxelarGateway.sol";
 import {IAxelarGasService} from "axelar-gmp-sdk-solidity/interfaces/IAxelarGasService.sol";
 import {Strings} from "openzeppelin/utils/Strings.sol";
@@ -18,7 +20,8 @@ contract SafeCrossChainOwnable {
     address public owner;
 
     modifier onlyCrossChainOwner() {
-        if (msg.sender != address(this)) revert InvalidCaller();
+        console.log(msg.sender);
+        if (msg.sender != address(this) && msg.sender != owner) revert InvalidCaller();
         _;
     }
 
@@ -46,7 +49,7 @@ contract SafeCrossChainOwnable {
             revert NotApprovedByGateway();
         }
 
-        if (!Strings.equal(sourceAddress, Strings.toHexString(address(this)))) revert InvalidCaller();
+        if (!Strings.equal(sourceAddress, Strings.toHexString(owner))) revert InvalidCaller();
 
         (bool success, bytes memory result) = address(this).call(payload);
 

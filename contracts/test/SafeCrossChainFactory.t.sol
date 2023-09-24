@@ -36,28 +36,42 @@ contract SafeCrossChainFactoryTest is Test {
         assertEq(address(factory.gasService()), gasService);
     }
 
-    function testCrossChainDeployment() public {
+    function testRemoteChainDeployment() public {
         bytes memory bytecode = type(Counter).creationCode;
         console.logBytes(bytecode);
-
         bytes memory initData = new bytes(0);
-        bytes32 _contractHash = keccak256(abi.encode(bytecode, initData));
 
         bytes32[] memory proof = new bytes32[](0);
         factory.enableBridge(gateway, gasService, proof);
 
-        bytes memory payload = abi.encode(block.chainid + 1, address(this), bytes32(0), _contractHash);
+        bytes memory payload = abi.encode(block.chainid, address(this), bytes32(0), bytecode, initData);
 
         factory.execute("", "", Strings.toHexString(address(factory)), payload);
 
-        assertEq(factory.getContractHash(block.chainid + 1, address(this), bytes32(0)), _contractHash);
+        address deployed = 0x8D8D03e85Cf061b7669e32eC83269c561d775523;
+        Counter counter = Counter(deployed);
 
-        address created = factory.create(block.chainid + 1, address(this), bytes32(0), bytecode, initData);
+        assertTrue(deployed.code.length > 0);
+        counter.enableBridge(gateway, gasService, proof);
+        counter.execute("", "", Strings.toHexString(address(this)), abi.encodeWithSignature("increment()"));
+        assertEq(counter.number(), 1);
+    }
 
-        assertTrue(created != address(0));
+    function testOriginChainDeployment() public {
+        bytes memory bytecode = type(Counter).creationCode;
+        bytes memory initData = new bytes(0);
 
-        Counter(created).increment();
+        bytes32[] memory proof = new bytes32[](0);
+        factory.enableBridge(gateway, gasService, proof);
 
-        assertEq(Counter(created).number(), 1);
+        factory.createLocal(bytes32(0), bytecode, initData);
+
+        address deployed = 0x8D8D03e85Cf061b7669e32eC83269c561d775523;
+        Counter counter = Counter(deployed);
+
+        assertTrue(deployed.code.length > 0);
+        counter.enableBridge(gateway, gasService, proof);
+        counter.execute("", "", Strings.toHexString(address(this)), abi.encodeWithSignature("increment()"));
+        assertEq(counter.number(), 1);
     }
 }

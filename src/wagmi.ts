@@ -18,7 +18,6 @@ import {
   lineaTestnet,
   baseGoerli,
   arbitrumGoerli,
-  filecoinCalibration,
 } from "wagmi/chains";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 
@@ -32,7 +31,6 @@ export const { chains, publicClient, webSocketPublicClient } = configureChains(
     lineaTestnet,
     baseGoerli,
     arbitrumGoerli,
-    filecoinCalibration,
   ],
   [
     alchemyProvider({ apiKey: "3TYMB_b0X1p4YBVMdNppiSpwIsAlPiJJ" }),
