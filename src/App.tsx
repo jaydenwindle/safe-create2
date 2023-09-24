@@ -262,6 +262,8 @@ export function App() {
     async () => await safeApiKit?.getSafesByOwner(address!)
   );
 
+  console.log(safesByOwner, error, isLoading);
+
   const { data: safeInstance, error: safeError } = useSWR(
     safesByOwner && safeAddress != ethers.constants.AddressZero
       ? "/safeInstance"
@@ -272,6 +274,8 @@ export function App() {
         safeAddress: safeAddress,
       })
   );
+
+  console.log(safeInstance, safeError);
 
   const deployedAddress = getContractAddress({
     from: FACTORY_ADDRESS,

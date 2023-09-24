@@ -54,7 +54,7 @@ console.log("Dev Merkle Root:", devBridgesTree.root);
 console.log("Testnet Merkle Root:", testnetBridgesTree.root);
 console.log("Mainnet Merkle Root:", mainnetBridgesTree.root);
 
-const chainId = 5;
+const chainId = 421613;
 const chainIndex = testnetBridges.findIndex(
   (bridge) => bridge.chainId == chainId
 );
